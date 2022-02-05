@@ -1,0 +1,7 @@
+api/url-shorten/.vs/
+api/url-shorten/UrlShorten.Tests/bin/
+api/url-shorten/UrlShorten/bin/
+api/url-shorten/UrlShorten/obj/
+api/url-shorten/UrlShorten.Tests/obj/
+api/url-shorten/UrlShorten/UrlShorten.csproj.user
+client/url-shorten/node_modules/

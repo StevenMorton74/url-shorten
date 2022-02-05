@@ -1,0 +1,14 @@
+version: '3'
+services:
+  shortener-db:
+    image: postgres:13
+    container_name: shortener-db
+    command: ["postgres", "-N 1000"]
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - ./sql/initialCreate.sql:/docker-entrypoint-initdb.d/initialCreate.sql
