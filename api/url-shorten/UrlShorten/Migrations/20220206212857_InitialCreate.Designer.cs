@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UrlShorten.Contexts;
 
 #nullable disable
@@ -9,7 +11,7 @@ using UrlShorten.Contexts;
 namespace UrlShorten.Migrations
 {
     [DbContext(typeof(UrlContext))]
-    [Migration("20220205101932_InitialCreate")]
+    [Migration("20220206212857_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -23,14 +25,7 @@ namespace UrlShorten.Migrations
 
             modelBuilder.Entity("UrlShorten.Models.ShortUrl", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Code")
-                        .IsRequired()
+                    b.Property<string>("Id")
                         .HasColumnType("text");
 
                     b.Property<string>("Url")
@@ -38,9 +33,6 @@ namespace UrlShorten.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
 
                     b.ToTable("Url");
                 });

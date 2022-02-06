@@ -11,11 +11,6 @@
 
         public virtual DbSet<ShortUrl> Url { get; set; }
 
-        public IDbContextTransactionProxy BeginTransaction()
-        {
-            return new DbContextTransactionProxy(this);
-        }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -23,9 +18,7 @@
             modelBuilder.Entity<ShortUrl>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.HasIndex(e => e.Code).IsUnique();
                 entity.Property(e => e.Url).IsRequired();
-                entity.Property(e => e.Code).IsRequired();
             });
         }
     }

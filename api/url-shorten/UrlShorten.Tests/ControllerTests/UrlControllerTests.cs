@@ -1,14 +1,13 @@
 ﻿namespace UrlShorten.Tests
 {
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
-    using MockQueryable.Moq;
     using Moq;
     using NUnit.Framework;
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Threading.Tasks;
     using UrlShorten.Contexts;
     using UrlShorten.Controllers;
@@ -25,25 +24,27 @@
         public void Setup()
         {
             // Arrange
+            var options = new DbContextOptionsBuilder<UrlContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options;
+
+            var context = new UrlContext(options);
+
             var data = new List<ShortUrl>
             {
-                new ShortUrl { Id = 0, Url = "https://test.com", Code = "48VIcsBN5UX" },
-                new ShortUrl { Id = 1, Url = "https://test2.com", Code = "48VIcsBN5UY" },
-                new ShortUrl { Id = 2, Url = "https://test3.com", Code = "48VIcsBN5UZ" },
+                new ShortUrl { Id = "test1", Url = "https://test.com" },
+                new ShortUrl { Id = "test2", Url = "https://test2.com" },
+                new ShortUrl { Id = "test3", Url = "https://test3.com" },
             };
 
-            var mockSet = data.AsQueryable().BuildMockDbSet();
-            var mockedDbTransaction = new Mock<IDbContextTransactionProxy>();
-
-            var mockContext = new Mock<IAppContext>();
-            mockContext.Setup(c => c.Url).Returns(mockSet.Object);
-            mockContext.Setup(c => c.BeginTransaction()).Returns(mockedDbTransaction.Object);
+            context.AddRange(data);
+            context.SaveChanges();
 
             var mockUrlValidator = new Mock<IUrlValidator>();
             mockUrlValidator.Setup(x => x.ValidateUrl(It.IsAny<string>())).Returns("https//www.test.com");
 
-            var mockEncoder = new Mock<IEncoder>();
-            mockEncoder.Setup(x => x.Encode(It.IsAny<int>())).Returns("TestCode");
+            var mockIdFactory = new Mock<IIdFactory>();
+            mockIdFactory.Setup(x => x.CreateId()).Returns("TestCode");
 
             var mockLogger = Mock.Of<ILogger<UrlController>>();
 
@@ -55,11 +56,11 @@
                 .AddInMemoryCollection(inMemoryConfig)
                 .Build();
 
-            _urlController = new UrlController(mockLogger, mockUrlValidator.Object, mockEncoder.Object, mockContext.Object, configuration);
+            _urlController = new UrlController(mockLogger, mockUrlValidator.Object, mockIdFactory.Object, context, configuration);
         }
 
         [Test]
-        public async Task CreateShortUrl_Creates_ShortUrl_Response()
+        public async Task CreateShortUrl_Returns_ShortUrl_Response()
         {
             // Arrange
             var request = new ShortenRequest
@@ -75,27 +76,25 @@
             Assert.That(result.Value.ShortUrl.Equals($"{_hostname}/TestCode"));
         }
 
-        [TestCase("48VIcsBN5UX")]
-        [TestCase("48VIcsBN5UY")]
-        [TestCase("48VIcsBN5UZ")]
-        public async Task GetByCode_Returns_Redirect_If_Found(string code)
+        [TestCase("test1")]
+        [TestCase("test2")]
+        [TestCase("test3")]
+        public async Task GetByCode_Returns_Redirect_If_Found(string id)
         {
             // Act
-            var result = await _urlController.GetByCode(code);
+            var result = await _urlController.GetById(id);
 
             // Assert
             Assert.IsInstanceOf<RedirectResult>(result);
         }
 
-        [TestCase("test")]
+        [TestCase("test4")]
         [TestCase("")]
         [TestCase(null)]
-        public async Task GetByCode_Returns_Not_Found_If_Not_Found(string code)
+        public async Task GetByCode_Returns_Not_Found_If_Not_Found(string id)
         {
             // Act
-            var result = await _urlController.GetByCode(code);
-
-            Console.WriteLine(result?.ToString());
+            var result = await _urlController.GetById(id);
 
             // Assert
             Assert.IsInstanceOf<NotFoundObjectResult>(result);

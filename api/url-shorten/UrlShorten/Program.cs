@@ -13,7 +13,7 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<UrlContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddScoped<IAppContext>(provider => provider.GetService<UrlContext>());
 builder.Services.AddScoped<IUrlValidator, UrlValidator>();
-builder.Services.AddScoped<IEncoder, Base62Encoder>();
+builder.Services.AddSingleton<IIdFactory, RandomIdFactory>();
 
 // Swagger services
 builder.Services.AddEndpointsApiExplorer();

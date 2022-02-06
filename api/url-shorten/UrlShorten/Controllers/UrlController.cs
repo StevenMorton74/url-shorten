@@ -1,7 +1,6 @@
 namespace UrlShorten.Controllers
 {
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.EntityFrameworkCore;
     using UrlShorten.Contexts;
     using UrlShorten.Models;
     using UrlShorten.Services;
@@ -12,20 +11,20 @@ namespace UrlShorten.Controllers
     {
         private readonly ILogger<UrlController> _logger;
         private readonly IUrlValidator _urlValidator;
-        private readonly IEncoder _encoder;
+        private readonly IIdFactory _idFactory;
         private readonly IAppContext _context;
         private readonly string _hostname;
 
         public UrlController(
             ILogger<UrlController> logger,
             IUrlValidator urlValidator,
-            IEncoder encoder,
+            IIdFactory idFactory,
             IAppContext context,
             IConfiguration config)
         {
             _logger = logger;
             _urlValidator = urlValidator;
-            _encoder = encoder;
+            _idFactory = idFactory;
             _context = context;
             _hostname = config["Hostname"];
         }
@@ -48,53 +47,48 @@ namespace UrlShorten.Controllers
                 return BadRequest($"The url you have provided is invalid. Please provide a valid url and try again.");
             }
 
-            var shortenedUrl = new ShortUrl()
-            {
-                Url = validUrl,
-                Code = Guid.NewGuid().ToString(),
-            };
+            var id = _idFactory.CreateId();
 
-            using var transaction = _context.BeginTransaction();
+            while(await _context.Url.FindAsync(id) != null)
+            {
+                id = _idFactory.CreateId();
+            }
+
+            var shortUrl = new ShortUrl
+            {
+                Id = id,
+                Url = validUrl,
+            };
 
             try
             {
-                _context.Url.Add(shortenedUrl);
+                _context.Url.Add(shortUrl);
                 await _context.SaveChangesAsync();
-
-                shortenedUrl.Code = _encoder.Encode(shortenedUrl.Id);
-                await _context.SaveChangesAsync();
-
-                transaction.Commit();
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
                 _logger.LogError("Error occured during transaction. {message}", ex.Message);
                 return StatusCode(StatusCodes.Status500InternalServerError, "An internal server error occurred. Please try again later.");
-            }
-            finally
-            {
-                transaction.Dispose();
             }
 
             var response = new ShortenResponse()
             {
-                ShortUrl = $"{_hostname}/{shortenedUrl.Code}",
+                ShortUrl = $"{_hostname}/{shortUrl.Id}",
             };
 
             return response;
         }
 
-        [HttpGet("{code}")]
+        [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status302Found)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GetByCode(string code)
+        public async Task<ActionResult> GetById(string id)
         {
-            var shortUrl = await _context.Url.FirstOrDefaultAsync(x => x.Code == code);
+            var shortUrl = await _context.Url.FindAsync(id);
 
             if (shortUrl == null || shortUrl.Url == null)
             {
-                _logger.LogDebug("Unable to find url with code {code}", code);
+                _logger.LogDebug("Unable to find url with code {id}", id);
                 return NotFound($"Unable to find a url with that code.");
             }
 
