@@ -92,7 +92,7 @@ namespace UrlShorten.Controllers
         {
             var shortUrl = await _context.Url.FirstOrDefaultAsync(x => x.Code == code);
 
-            if (shortUrl == null && shortUrl?.Url == null)
+            if (shortUrl == null || shortUrl.Url == null)
             {
                 _logger.LogDebug("Unable to find url with code {code}", code);
                 return NotFound("");
