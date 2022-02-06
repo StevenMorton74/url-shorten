@@ -1,13 +1,15 @@
 ﻿namespace UrlShorten.Tests
 {
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
+    using MockQueryable.Moq;
     using Moq;
     using NUnit.Framework;
+    using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
     using UrlShorten.Contexts;
     using UrlShorten.Controllers;
     using UrlShorten.Models;
@@ -28,14 +30,9 @@
                 new ShortUrl { Id = 0, Url = "https://test.com", Code = "48VIcsBN5UX" },
                 new ShortUrl { Id = 1, Url = "https://test2.com", Code = "48VIcsBN5UY" },
                 new ShortUrl { Id = 2, Url = "https://test3.com", Code = "48VIcsBN5UZ" },
-            }.AsQueryable();
+            };
 
-            var mockSet = new Mock<DbSet<ShortUrl>>();
-            mockSet.As<IQueryable<ShortUrl>>().Setup(m => m.Provider).Returns(data.Provider);
-            mockSet.As<IQueryable<ShortUrl>>().Setup(m => m.Expression).Returns(data.Expression);
-            mockSet.As<IQueryable<ShortUrl>>().Setup(m => m.ElementType).Returns(data.ElementType);
-            mockSet.As<IQueryable<ShortUrl>>().Setup(m => m.GetEnumerator()).Returns(data.GetEnumerator());
-
+            var mockSet = data.AsQueryable().BuildMockDbSet();
             var mockedDbTransaction = new Mock<IDbContextTransactionProxy>();
 
             var mockContext = new Mock<IAppContext>();
@@ -44,7 +41,7 @@
 
             var mockUrlValidator = new Mock<IUrlValidator>();
             mockUrlValidator.Setup(x => x.ValidateUrl(It.IsAny<string>())).Returns("https//www.test.com");
-            
+
             var mockEncoder = new Mock<IEncoder>();
             mockEncoder.Setup(x => x.Encode(It.IsAny<int>())).Returns("TestCode");
 
@@ -62,7 +59,7 @@
         }
 
         [Test]
-        public void CreateShortUrl_Creates_ShortUrl_Response()
+        public async Task CreateShortUrl_Creates_ShortUrl_Response()
         {
             // Arrange
             var request = new ShortenRequest
@@ -71,7 +68,7 @@
             };
 
             // Act
-            var result = _urlController.CreateShortUrl(request);
+            var result = await _urlController.CreateShortUrl(request);
 
             // Assert
             Assert.IsNotNull(result?.Value?.ShortUrl);
@@ -81,10 +78,10 @@
         [TestCase("48VIcsBN5UX")]
         [TestCase("48VIcsBN5UY")]
         [TestCase("48VIcsBN5UZ")]
-        public void GetByCode_Returns_Redirect_If_Found(string code)
+        public async Task GetByCode_Returns_Redirect_If_Found(string code)
         {
             // Act
-            var result = _urlController.GetByCode(code);
+            var result = await _urlController.GetByCode(code);
 
             // Assert
             Assert.IsInstanceOf<RedirectResult>(result);
@@ -93,13 +90,15 @@
         [TestCase("test")]
         [TestCase("")]
         [TestCase(null)]
-        public void GetByCode_Returns_Not_Found_If_Not_Found(string code)
+        public async Task GetByCode_Returns_Not_Found_If_Not_Found(string code)
         {
             // Act
-            var result = _urlController.GetByCode(code);
+            var result = await _urlController.GetByCode(code);
+
+            Console.WriteLine(result?.ToString());
 
             // Assert
-            Assert.IsInstanceOf<NotFoundResult>(result);
+            Assert.IsInstanceOf<NotFoundObjectResult>(result);
         }
     }
 }

@@ -1,6 +1,7 @@
 namespace UrlShorten.Controllers
 {
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.EntityFrameworkCore;
     using UrlShorten.Contexts;
     using UrlShorten.Models;
     using UrlShorten.Services;
@@ -33,7 +34,7 @@ namespace UrlShorten.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public ActionResult<ShortenResponse> CreateShortUrl([FromBody] ShortenRequest request)
+        public async Task<ActionResult<ShortenResponse>> CreateShortUrl([FromBody] ShortenRequest request)
         {
             if (string.IsNullOrEmpty(request.Url))
             {
@@ -58,10 +59,10 @@ namespace UrlShorten.Controllers
             try
             {
                 _context.Url.Add(shortenedUrl);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
 
                 shortenedUrl.Code = _encoder.Encode(shortenedUrl.Id);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
 
                 transaction.Commit();
             }
@@ -87,9 +88,9 @@ namespace UrlShorten.Controllers
         [HttpGet("{code}")]
         [ProducesResponseType(StatusCodes.Status302Found)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GetByCode(string code)
+        public async Task<ActionResult> GetByCode(string code)
         {
-            var shortUrl = _context.Url.FirstOrDefault(x => x.Code == code);
+            var shortUrl = await _context.Url.FirstOrDefaultAsync(x => x.Code == code);
 
             if (shortUrl == null && shortUrl?.Url == null)
             {

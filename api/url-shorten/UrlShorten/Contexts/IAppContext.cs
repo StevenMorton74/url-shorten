@@ -7,7 +7,7 @@
     {
         DbSet<ShortUrl> Url { get; set; }
 
-        int SaveChanges();
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
         IDbContextTransactionProxy BeginTransaction();
     }
