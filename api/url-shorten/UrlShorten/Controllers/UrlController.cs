@@ -95,7 +95,7 @@ namespace UrlShorten.Controllers
             if (shortUrl == null || shortUrl.Url == null)
             {
                 _logger.LogDebug("Unable to find url with code {code}", code);
-                return NotFound("");
+                return NotFound($"Unable to find a url with that code.");
             }
 
             return Redirect(shortUrl.Url);
