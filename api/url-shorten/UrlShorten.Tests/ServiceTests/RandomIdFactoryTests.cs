@@ -1,27 +1,28 @@
 namespace UrlShorten.Tests
 {
-    using NUnit.Framework;
     using UrlShorten.Services;
+    using Xunit;
 
-    [TestFixture]
     public class RandomIdFactoryTests
     {
         private IIdFactory idFactory;
 
-        [SetUp]
-        public void Setup()
+        public RandomIdFactoryTests()
         {
             idFactory = new RandomIdFactory();
         }
 
-        [Test]
+        [Fact]
         public void CreateId_Generates_A_String_With_A_Length_Of_8()
         {
+            // Arrange
+            var expectedLength = 8;
+
             // Act
             var result = idFactory.CreateId();
 
             // Assert
-            Assert.That(result.Length == 8);
+            Assert.Equal(expectedLength, result.Length);
         }
     }
 }

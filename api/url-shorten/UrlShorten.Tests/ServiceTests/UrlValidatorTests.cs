@@ -1,35 +1,41 @@
 namespace UrlShorten.Tests
 {
-    using NUnit.Framework;
     using UrlShorten.Services;
+    using Xunit;
 
-    [TestFixture]
     public class UrlValidatorTests
     {
         private IUrlValidator _urlValidator;
 
-        [SetUp]
-        public void Setup()
+        public UrlValidatorTests()
         {
             _urlValidator = new UrlValidator();
         }
 
-        [TestCase("https://www.test.com/", ExpectedResult = "https://www.test.com/")]
-        [TestCase("www.test.com", ExpectedResult = "http://www.test.com/")]
-        [TestCase("test.org", ExpectedResult = "http://test.org/")]
-        public string ValidateUrl_Returns_Fully_Formed_Urls(string url)
+        [Theory]
+        [InlineData("https://www.test.com/", "https://www.test.com/")]
+        [InlineData("www.test.com", "http://www.test.com/")]
+        [InlineData("test.org", "http://test.org/")]
+        public void ValidateUrl_Returns_Fully_Formed_Urls(string url, string expected)
         {
-            return _urlValidator.ValidateUrl(url);
-        }
-
-        [TestCase(null)]
-        [TestCase("")]
-        [TestCase("test")]
-        public void ValidateUrl_Returns_Null_On_Invalid_Url_Format(string url)
-        {
+            // Act
             var actual = _urlValidator.ValidateUrl(url);
 
-            Assert.AreEqual(actual, null);
+            // Assert
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("test")]
+        public void ValidateUrl_Returns_Null_On_Invalid_Url_Format(string url)
+        {
+            // Act
+            var actual = _urlValidator.ValidateUrl(url);
+
+            // Assert
+            Assert.Null(actual);
         }
     }
 }

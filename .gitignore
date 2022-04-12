@@ -5,3 +5,4 @@ api/url-shorten/UrlShorten/obj/
 api/url-shorten/UrlShorten.Tests/obj/
 api/url-shorten/UrlShorten/UrlShorten.csproj.user
 client/url-shorten/node_modules/
+api/url-shorten/UrlShorten.Tests/TestResults/

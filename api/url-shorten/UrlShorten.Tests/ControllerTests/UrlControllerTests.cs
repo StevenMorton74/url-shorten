@@ -5,7 +5,6 @@
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
     using Moq;
-    using NUnit.Framework;
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
@@ -13,17 +12,15 @@
     using UrlShorten.Controllers;
     using UrlShorten.Models;
     using UrlShorten.Services;
+    using Xunit;
 
-    [TestFixture]
     public class UrlControllerTests
     {
         private const string _hostname = "https://localhost:7139";
         private UrlController _urlController;
 
-        [SetUp]
-        public void Setup()
+        public UrlControllerTests()
         {
-            // Arrange
             var options = new DbContextOptionsBuilder<UrlContext>()
                 .UseInMemoryDatabase(Guid.NewGuid().ToString())
                 .Options;
@@ -59,7 +56,7 @@
             _urlController = new UrlController(mockLogger, mockUrlValidator.Object, mockIdFactory.Object, context, configuration);
         }
 
-        [Test]
+        [Fact]
         public async Task CreateShortUrl_Returns_ShortUrl_Response()
         {
             // Arrange
@@ -69,35 +66,37 @@
             };
 
             // Act
-            var result = await _urlController.CreateShortUrl(request);
+            var actual = await _urlController.CreateShortUrl(request);
 
             // Assert
-            Assert.IsNotNull(result?.Value?.ShortUrl);
-            Assert.That(result.Value.ShortUrl.Equals($"{_hostname}/TestCode"));
+            Assert.NotNull(actual?.Value?.ShortUrl);
+            Assert.Equal(actual.Value.ShortUrl, $"{_hostname}/TestCode");
         }
 
-        [TestCase("test1")]
-        [TestCase("test2")]
-        [TestCase("test3")]
+        [Theory]
+        [InlineData("test1")]
+        [InlineData("test2")]
+        [InlineData("test3")]
         public async Task GetByCode_Returns_Redirect_If_Found(string id)
         {
             // Act
-            var result = await _urlController.GetById(id);
+            var actual = await _urlController.GetById(id);
 
             // Assert
-            Assert.IsInstanceOf<RedirectResult>(result);
+            Assert.IsType<RedirectResult>(actual);
         }
 
-        [TestCase("test4")]
-        [TestCase("")]
-        [TestCase(null)]
+        [Theory]
+        [InlineData("test4")]
+        [InlineData("")]
+        [InlineData(null)]
         public async Task GetByCode_Returns_Not_Found_If_Not_Found(string id)
         {
             // Act
-            var result = await _urlController.GetById(id);
+            var actual = await _urlController.GetById(id);
 
             // Assert
-            Assert.IsInstanceOf<NotFoundObjectResult>(result);
+            Assert.IsType<NotFoundObjectResult>(actual);
         }
     }
 }
