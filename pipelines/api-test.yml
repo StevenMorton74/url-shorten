@@ -10,7 +10,7 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  solution: 'api/UrlShorten/UrlShorten.sln'
+  solution: 'url-shorten/api/url-shorten/UrlShorten.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
