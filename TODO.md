@@ -1,6 +1,7 @@
 # TODO
 
-* Implement git branching strategy (tbd, stategy to best suit continous deployment)
+## High priority
+* Implement git branching strategy (tbd, strategy to best suit continous deployment)
 * Update test pipeline with new branch name prefixes
 * Replace nUnit with xUnit to allow for code coverage collection
 * Publish test coverage to Azure DevOps pipeline
@@ -11,3 +12,10 @@
 * Add continous deployment pipeline (to minimise/eliminate downtime)
 * Deploy dev environment from dev branch
 * Set up prod environment from main branch
+
+## Low priority
+* Publish OpenAPI documentation on release
+* Add testing framework and tests to client
+* Add client-test pipeline
+* Refactor client styling (implement styled components)
+
