@@ -2,6 +2,7 @@
 
 * Implement git branching strategy (tbd, stategy to best suit continous deployment)
 * Update test pipeline with new branch name prefixes
+* Replace nUnit with xUnit to allow for code coverage collection
 * Publish test coverage to Azure DevOps pipeline
 * Add gated check-in pipeline with test pass and code coverage requirements
 * Run gated check-in on all feature/bug/patch/hotfix branches
